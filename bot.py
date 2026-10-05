@@ -41,6 +41,21 @@ def tg(method, **params):
         print("telegram error:", e)
         return {}
 
+def update_dashboard(task="", reply=""):
+    """ড্যাশবোর্ডের স্টেট আপডেট করে"""
+    try:
+        from dashboard import DASHBOARD_STATE
+        if task:
+            DASHBOARD_STATE["current_task"] = task[:200]
+            DASHBOARD_STATE["busy"] = True
+        if reply:
+            DASHBOARD_STATE["last_reply"] = reply[:200]
+            DASHBOARD_STATE["busy"] = False
+            DASHBOARD_STATE["recent_logs"].append(f"[Reply] {reply[:100]}")
+            DASHBOARD_STATE["recent_logs"] = DASHBOARD_STATE["recent_logs"][-20:]
+    except Exception:
+        pass
+
 def send(chat, text, markup=None):
     text = text or "(empty)"
     chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
@@ -78,6 +93,7 @@ def download_telegram_file(file_id, save_path):
     return None
 
 def work(chat, text):
+    update_dashboard(task=text)
     try:
         history = agent.memory_store.load_history("telegram_session")
         reply = agent.run_agent(LLM, history, text)
@@ -85,6 +101,7 @@ def work(chat, text):
     except Exception as e:
         reply = f"Error: {e}"
     try:
+        update_dashboard(reply=reply)
         send(chat, reply)
     finally:
         pass # busy.release() না থাকলে এখানে কিছু করার নেই
@@ -217,6 +234,8 @@ def run_telegram_bot():
 
 # ---- Render Combined HTTP + WebSocket Server ----
 app = Flask(__name__)
+from dashboard import register_dashboard_routes, DASHBOARD_STATE
+register_dashboard_routes(app, SHARED_SECRET, str(agent.WORKSPACE))
 sock = Sock(app)
 
 @app.route("/")
