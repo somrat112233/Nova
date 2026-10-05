@@ -155,7 +155,8 @@ def get_location() -> str:
 TOOLS = {t.name: t for t in [run_shell, read_file, write_file, list_files, fetch_url,
                              battery_status, notify, speak, get_clipboard,
                              set_clipboard, get_location, vibrate, toggle_torch,
-                             set_volume, get_volume, get_sensor, take_photo]}
+                             set_volume, get_volume, get_sensor, take_photo,
+                             schedule_task, list_scheduled_tasks, cancel_scheduled_task]}
 
 def learn_ctx(q):
     try:

@@ -54,8 +54,82 @@ def execute_tool(tool_name: str, args: dict) -> str:
         return run_termux_command(["termux-sensor", "-s", sensor, "-n", "1"])
     elif tool_name == "take_photo":
         return run_termux_command(["termux-camera-photo", "-c", "0", args.get("filename", "photo.jpg")])
+    elif tool_name == "schedule_task":
+        import uuid
+        tid = args.get("task_id") or str(uuid.uuid4())[:8]
+        interval = args.get("interval_minutes", 60)
+        t_name = args.get("tool_name")
+        t_args = args.get("args", {})
+        
+        tasks = load_schedule()
+        tasks.append({"id": tid, "interval": interval, "tool": t_name, "args": t_args, "next_run": time.time() + (interval * 60)})
+        save_schedule(tasks)
+        return f"Task {tid} scheduled to run every {interval} minutes."
+    elif tool_name == "list_scheduled_tasks":
+        tasks = load_schedule()
+        if not tasks: return "No scheduled tasks."
+        return "\n".join([f"- {t['id']}: {t['tool']} every {t['interval']} mins" for t in tasks])
+    elif tool_name == "cancel_scheduled_task":
+        tid = args.get("task_id")
+        tasks = load_schedule()
+        tasks = [t for t in tasks if t['id'] != tid]
+        save_schedule(tasks)
+        return f"Task {tid} cancelled."
     else:
         return f"ERROR: Unknown tool {tool_name}"
+
+
+import json
+import time
+import threading
+
+SCHEDULE_FILE = "schedule.json"
+
+def load_schedule():
+    if os.path.exists(SCHEDULE_FILE):
+        try:
+            return json.load(open(SCHEDULE_FILE))
+        except:
+            return []
+    return []
+
+def save_schedule(tasks):
+    with open(SCHEDULE_FILE, "w") as f:
+        json.dump(tasks, f)
+
+def scheduler_loop(websocket_holder):
+    while True:
+        try:
+            tasks = load_schedule()
+            now = time.time()
+            updated = False
+            for t in tasks:
+                if now >= t["next_run"]:
+                    print(f"⏰ Running scheduled task: {t['id']} ({t['tool']})")
+                    # টাস্কটি এক্সিকিউট করে ক্লাউডে পাঠানো
+                    result = execute_tool(t["tool"], t["args"])
+                    # ক্লাউডে ফলাফল পাঠানো (WebSocket দিয়ে)
+                    if websocket_holder.get("ws"):
+                        try:
+                            ws = websocket_holder["ws"]
+                            asyncio.run_coroutine_threadsafe(ws.send(json.dumps({
+                                "type": "tool_result",
+                                "tool": t["tool"],
+                                "result": f"[Scheduled Task {t['id']}] {result}"
+                            })), asyncio.get_event_loop())
+                        except Exception as e:
+                            print(f"Error sending scheduled result: {e}")
+                    
+                    t["next_run"] = now + (t["interval"] * 60)
+                    updated = True
+            if updated:
+                save_schedule(tasks)
+        except Exception as e:
+            print(f"Scheduler error: {e}")
+        time.sleep(30) # প্রতি ৩০ সেকেন্ডে চেক করবে
+
+# গ্লোবাল ভেরিয়েবল ওয়েবসকেট হোল্ড করার জন্য
+ws_holder = {"ws": None}
 
 async def connect_to_cloud():
     attempt = 0
@@ -116,4 +190,5 @@ async def connect_to_cloud():
         backoff *= 2
 
 if __name__ == "__main__":
+    threading.Thread(target=scheduler_loop, args=(ws_holder,), daemon=True).start()
     asyncio.run(connect_to_cloud())
