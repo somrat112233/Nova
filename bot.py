@@ -100,9 +100,11 @@ agent.input = tg_input
 
 # ---- Render Health Check Server ----
 from flask import Flask
+from flask_sock import Sock
 import threading
 
 health_app = Flask(__name__)
+sock = Sock(app)
 
 @health_app.route("/")
 def health():
