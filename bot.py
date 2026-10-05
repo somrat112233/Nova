@@ -65,7 +65,9 @@ def build_llm():
                          base_url="https://api.groq.com/openai/v1",
                          api_key=key, max_tokens=2048)
     else:
-        agent.ensure_key()
+        backend = os.getenv("AGENT_BACKEND", "anthropic")
+        if backend != "groq":
+            agent.ensure_key()
         llm = agent.ChatAnthropic(model=agent.MODEL, max_tokens=2048)
     return llm.bind_tools(list(agent.TOOLS.values()))
 

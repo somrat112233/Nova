@@ -147,7 +147,8 @@ except Exception as _e:
 
 
 def ensure_key():
-    if os.getenv("AGENT_BACKEND") in ("local", "gemini") or os.getenv("ANTHROPIC_API_KEY"):
+    backend = os.getenv("AGENT_BACKEND", "anthropic")
+    if backend in ("local", "gemini", "groq") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("GROQ_API_KEY"):
         return
     key = getpass.getpass("Enter your ANTHROPIC_API_KEY (saved to ~/agi/.env): ").strip()
     with open(ENV_FILE, "a") as _f:
@@ -165,9 +166,15 @@ def text_of(msg) -> str:
 class NeonMemoryStore:
     def __init__(self, connection_string):
         self.conn_string = connection_string
+        if not self.conn_string:
+            print("WARNING: NEON_DATABASE_URL is not set. Memory will not be persistent.")
+            self.enabled = False
+            return
+        self.enabled = True
         self._init_table()
 
     def _init_table(self):
+        if not self.enabled: return
         try:
             with psycopg2.connect(self.conn_string) as conn:
                 with conn.cursor() as cur:
@@ -185,6 +192,7 @@ class NeonMemoryStore:
             print(f"Neon DB Init Error: {e}")
 
     def load_history(self, session_id: str):
+        if not self.enabled: return []
         try:
             with psycopg2.connect(self.conn_string) as conn:
                 with conn.cursor() as cur:
@@ -198,6 +206,7 @@ class NeonMemoryStore:
             return []
 
     def save_history(self, session_id: str, history: list):
+        if not self.enabled: return
         try:
             from langchain_core.messages import messages_to_dict
             with psycopg2.connect(self.conn_string) as conn:
