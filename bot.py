@@ -51,24 +51,13 @@ def send(chat, text, markup=None):
 
 
 def build_llm():
-    backend = os.getenv("AGENT_BACKEND", "anthropic")
-    if backend == "local":
-        from langchain_openai import ChatOpenAI
-        llm = ChatOpenAI(model="local", base_url="http://127.0.0.1:8080/v1",
-                         api_key="none", max_tokens=1024, temperature=0.2)
-    elif backend == "groq":
-        from langchain_openai import ChatOpenAI
-        key = os.getenv("GROQ_API_KEY")
-        if not key:
-            sys.exit("GROQ_API_KEY not found. Please add it to Render Environment Variables.")
-        llm = ChatOpenAI(model=os.getenv("AGENT_GROQ_MODEL", "llama-3.3-70b-versatile"),
-                         base_url="https://api.groq.com/openai/v1",
-                         api_key=key, max_tokens=2048)
-    else:
-        backend = os.getenv("AGENT_BACKEND", "anthropic")
-        if backend != "groq":
-            agent.ensure_key()
-        llm = agent.ChatAnthropic(model=agent.MODEL, max_tokens=2048)
+    from langchain_openai import ChatOpenAI
+    key = os.getenv("GROQ_API_KEY")
+    if not key:
+        sys.exit("GROQ_API_KEY not found. Please add it to Render Environment Variables.")
+    llm = ChatOpenAI(model=os.getenv("AGENT_GROQ_MODEL", "llama-3.3-70b-versatile"),
+                     base_url="https://api.groq.com/openai/v1",
+                     api_key=key, max_tokens=2048)
     return llm.bind_tools(list(agent.TOOLS.values()))
 
 

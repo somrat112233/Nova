@@ -245,7 +245,6 @@ def run_agent(llm, history, user_input):
     return "Stopped: reached max steps."
 
 def main():
-    ensure_key()
     if os.getenv("AGENT_BACKEND") == "groq":
         from langchain_openai import ChatOpenAI
         gkey = os.getenv("GROQ_API_KEY")
