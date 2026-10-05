@@ -193,17 +193,19 @@ def run_agent(llm, history, user_input):
 
 def main():
     ensure_key()
-    if os.getenv("AGENT_BACKEND") == "gemini":
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        gkey = os.getenv("GEMINI_API_KEY")
+    if os.getenv("AGENT_BACKEND") == "groq":
+        from langchain_openai import ChatOpenAI
+        gkey = os.getenv("GROQ_API_KEY")
         if not gkey:
-            gkey = getpass.getpass("Enter your GEMINI_API_KEY (saved to ~/agi/.env): ").strip()
+            gkey = getpass.getpass("Enter your GROQ_API_KEY (saved to ~/agi/.env): ").strip()
             with open(ENV_FILE, "a") as f:
                 f.write(f"
-GEMINI_API_KEY={gkey}
+GROQ_API_KEY={gkey}
 ")
             os.chmod(ENV_FILE, 0o600)
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", google_api_key=gkey)
+        llm = ChatOpenAI(model=os.getenv("AGENT_GROQ_MODEL", "llama-3.3-70b-versatile"),
+                         base_url="https://api.groq.com/openai/v1",
+                         api_key=gkey, max_tokens=2048)
     else:
         llm = ChatAnthropic(model=MODEL, max_tokens=2048)
     llm = llm.bind_tools(list(TOOLS.values()))

@@ -55,12 +55,14 @@ def build_llm():
         from langchain_openai import ChatOpenAI
         llm = ChatOpenAI(model="local", base_url="http://127.0.0.1:8080/v1",
                          api_key="none", max_tokens=1024, temperature=0.2)
-    elif backend == "gemini":
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        key = os.getenv("GEMINI_API_KEY")
+    elif backend == "groq":
+        from langchain_openai import ChatOpenAI
+        key = os.getenv("GROQ_API_KEY")
         if not key:
-            sys.exit("GEMINI_API_KEY not found. Please add it to Render Environment Variables.")
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", google_api_key=key)
+            sys.exit("GROQ_API_KEY not found. Please add it to Render Environment Variables.")
+        llm = ChatOpenAI(model=os.getenv("AGENT_GROQ_MODEL", "llama-3.3-70b-versatile"),
+                         base_url="https://api.groq.com/openai/v1",
+                         api_key=key, max_tokens=2048)
     else:
         agent.ensure_key()
         llm = agent.ChatAnthropic(model=agent.MODEL, max_tokens=2048)
