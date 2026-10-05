@@ -243,9 +243,7 @@ def main():
         if not gkey:
             gkey = getpass.getpass("Enter your GROQ_API_KEY (saved to ~/agi/.env): ").strip()
             with open(ENV_FILE, "a") as f:
-                f.write("
-GROQ_API_KEY=" + gkey + "
-")
+                f.write("\nGROQ_API_KEY=" + gkey + "\n")
             os.chmod(ENV_FILE, 0o600)
             os.chmod(ENV_FILE, 0o600)
         llm = ChatOpenAI(model=os.getenv("AGENT_GROQ_MODEL", "llama-3.3-70b-versatile"),
