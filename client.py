@@ -37,6 +37,23 @@ def execute_tool(tool_name: str, args: dict) -> str:
         return run_termux_command(["termux-clipboard-set", args.get("text", "")])
     elif tool_name == "get_location":
         return run_termux_command(["termux-location", "-p", "network"])
+    elif tool_name == "vibrate":
+        duration = str(args.get("duration_ms", 1000))
+        return run_termux_command(["termux-vibrate", "-d", duration])
+    elif tool_name == "toggle_torch":
+        state = args.get("state", "on")
+        return run_termux_command(["termux-torch", state])
+    elif tool_name == "set_volume":
+        stream = args.get("stream", "music")
+        vol = str(args.get("volume", 50))
+        return run_termux_command(["termux-volume", stream, vol])
+    elif tool_name == "get_volume":
+        return run_termux_command(["termux-volume"])
+    elif tool_name == "get_sensor":
+        sensor = args.get("sensor_name", "accelerometer")
+        return run_termux_command(["termux-sensor", "-s", sensor, "-n", "1"])
+    elif tool_name == "take_photo":
+        return run_termux_command(["termux-camera-photo", "-c", "0", args.get("filename", "photo.jpg")])
     else:
         return f"ERROR: Unknown tool {tool_name}"
 
