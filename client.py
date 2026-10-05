@@ -7,6 +7,27 @@ import hashlib
 import os
 
 # ⚠️ এখানে আপনার Render এর WebSocket URL বসান (wss://your-bot.onrender.com)
+
+import uuid
+import hashlib
+
+# ফোনের ইউনিক Device ID তৈরি করা (প্রথমবার তৈরি হলে সেভ হবে)
+DEVICE_ID_FILE = os.path.expanduser("~/.nova_device_id")
+
+def get_device_id():
+    if os.path.exists(DEVICE_ID_FILE):
+        with open(DEVICE_ID_FILE) as f:
+            return f.read().strip()
+    # ফোনের MAC + Android ID + Random UUID মিলিয়ে ইউনিক আইডি
+    unique_data = f"{uuid.getnode()}-{uuid.uuid4().hex[:8]}"
+    device_id = hashlib.sha256(unique_data.encode()).hexdigest()[:16]
+    with open(DEVICE_ID_FILE, "w") as f:
+        f.write(device_id)
+    return device_id
+
+DEVICE_ID = get_device_id()
+print(f"📱 Device ID: {DEVICE_ID}")
+
 CLOUD_WS_URL = os.getenv("CLOUD_WS_URL", "wss://your-render-url.onrender.com")
 # ⚠️ Render এর Env Var এ দেওয়া AGENT_SHARED_SECRET বসান
 SHARED_SECRET = os.getenv("AGENT_SHARED_SECRET", "your-secret-here")
@@ -14,6 +35,15 @@ SHARED_SECRET = os.getenv("AGENT_SHARED_SECRET", "your-secret-here")
 MAX_RECONNECT_ATTEMPTS = 10
 INITIAL_BACKOFF = 1
 MAX_BACKOFF = 60
+
+
+# অনুমোদিত কমান্ডের তালিকা (ক্লায়েন্ট সাইডে অতিরিক্ত নিরাপত্তা)
+ALLOWED_TOOLS = {
+    "battery_status", "notify", "speak", "get_clipboard", "set_clipboard",
+    "get_location", "vibrate", "toggle_torch", "set_volume", "get_volume",
+    "get_sensor", "take_photo", "schedule_task", "list_scheduled_tasks",
+    "cancel_scheduled_task"
+}
 
 def run_termux_command(cmd: list) -> str:
     try:
@@ -25,6 +55,8 @@ def run_termux_command(cmd: list) -> str:
         return "ERROR: command timed out"
 
 def execute_tool(tool_name: str, args: dict) -> str:
+    if tool_name not in ALLOWED_TOOLS:
+        return f"❌ BLOCKED: Tool '{tool_name}' is not in the client allowlist."
     if tool_name == "battery_status":
         return run_termux_command(["termux-battery-status"])
     elif tool_name == "notify":
@@ -142,7 +174,7 @@ async def connect_to_cloud():
             # 🔐 সিকিউর হ্যান্ডশেক: হেডারে সিক্রেট পাঠানো
             async with websockets.connect(
                 CLOUD_WS_URL,
-                extra_headers={"X-Auth-Token": SHARED_SECRET},
+                extra_headers={"X-Auth-Token": SHARED_SECRET, "X-Device-ID": DEVICE_ID},
                 ping_interval=30,
                 ping_timeout=10,
                 close_timeout=5

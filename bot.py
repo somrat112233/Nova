@@ -17,6 +17,16 @@ FAILS = 0
 
 # WebSocket কনফিগারেশন
 SHARED_SECRET = os.getenv("AGENT_SHARED_SECRET", "your-secret-here")
+
+# সার্ভার সাইডে অনুমোদিত ডিভাইস এবং কমান্ড
+ALLOWED_DEVICES = os.getenv("ALLOWED_DEVICE_IDS", "").split(",")  # কমা দিয়ে আলাদা করা
+SERVER_ALLOWED_TOOLS = {
+    "battery_status", "notify", "speak", "get_clipboard", "set_clipboard",
+    "get_location", "vibrate", "toggle_torch", "set_volume", "get_volume",
+    "get_sensor", "take_photo", "schedule_task", "list_scheduled_tasks",
+    "cancel_scheduled_task", "run_shell", "read_file", "write_file"
+}
+
 ws_clients = set()
 
 # LLM সেটআপ (Groq)
@@ -245,12 +255,22 @@ def health_check():
 @sock.route('/ws')
 def ws_handler(ws):
     token = request.headers.get('X-Auth-Token')
+    device_id = request.headers.get('X-Device-ID', 'unknown')
+    
+    # সিক্রেট টোকেন চেক
     if token != SHARED_SECRET:
-        print("❌ Unauthorized connection attempt.")
+        print(f"❌ Unauthorized: Invalid token from device {device_id}")
         ws.close()
         return
+    
+    # Device ID Allowlist চেক (যদি Env Var এ সেট থাকে)
+    if ALLOWED_DEVICES and ALLOWED_DEVICES[0] and device_id not in ALLOWED_DEVICES:
+        print(f"❌ Unauthorized Device: {device_id} is not in allowlist.")
+        ws.close()
+        return
+    
     ws_clients.add(ws)
-    print("✅ Phone client connected.")
+    print(f"✅ Phone client connected: {device_id}")
     try:
         while True:
             message = ws.receive()
