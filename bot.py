@@ -103,8 +103,7 @@ from flask import Flask
 from flask_sock import Sock
 import threading
 
-health_app = Flask(__name__)
-sock = Sock(app)
+health_
 
 @health_app.route("/")
 def health():
