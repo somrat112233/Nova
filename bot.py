@@ -140,10 +140,14 @@ def ws_handler(ws):
         ws_clients.discard(ws)
         print("❌ Phone client disconnected.")
 
-def run_flask_server():
-    port = int(os.getenv("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
-# সার্ভার চালু করা (ব্যাকগ্রাউন্ডে)
-threading.Thread(target=run_flask_server, daemon=True).start()
 # ------------------------------------------------
+
+if __name__ == "__main__":
+    import threading
+    print("🚀 Starting Telegram bot in background thread...")
+    threading.Thread(target=run_telegram_bot, daemon=True).start()
+    
+    port = int(os.getenv("PORT", 10000))
+    print(f"🌐 Starting Flask server on port {port}...")
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False, threaded=True)
