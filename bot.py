@@ -45,10 +45,37 @@ def send(chat, text, markup=None):
     text = text or "(empty)"
     chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
     for i, c in enumerate(chunks):
-        p = {"chat_id": chat, "text": c}
+        p = {"chat_id": chat, "text": c, "parse_mode": "HTML"}
         if markup and i == len(chunks) - 1:
             p["reply_markup"] = markup
-        tg("sendMessage", **p)
+        res = tg("sendMessage", **p)
+        if not res.get("ok"): # HTML ভাঙলে প্লেইন টেক্সটে পাঠানো
+            p.pop("parse_mode")
+            tg("sendMessage", **p)
+
+
+def send_document(chat, filepath, caption=""):
+    url = f"https://api.telegram.org/bot{TOKEN}/sendDocument"
+    try:
+        with open(filepath, "rb") as f:
+            requests.post(url, data={"chat_id": chat, "caption": caption}, files={"document": f})
+        return "File sent successfully."
+    except Exception as e:
+        return f"Error sending file: {e}"
+
+def download_telegram_file(file_id, save_path):
+    file_info = tg("getFile", file_id=file_id)
+    if not file_info.get("ok"):
+        return None
+    file_path = file_info["result"]["file_path"]
+    url = f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
+    r = requests.get(url)
+    if r.status_code == 200:
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(save_path, "wb") as f:
+            f.write(r.content)
+        return save_path
+    return None
 
 def work(chat, text):
     try:
@@ -77,7 +104,27 @@ def handle(u):
     chat = m["chat"]["id"]
     
     text = ""
-    if "text" in m:
+    if "document" in m:
+        doc = m["document"]
+        filename = doc.get("file_name", "uploaded_file")
+        save_path = str(agent.WORKSPACE / filename)
+        if download_telegram_file(doc["file_id"], save_path):
+            send(chat, f"📁 File received and saved to workspace: <code>{filename}</code>")
+            text = f"I have uploaded a file named '{filename}' to the workspace. Please analyze it or tell me what to do with it."
+        else:
+            send(chat, "❌ Failed to download the file.")
+            return
+    elif "photo" in m:
+        photo = m["photo"][-1] # Get the highest resolution
+        filename = f"photo_{photo['file_unique_id']}.jpg"
+        save_path = str(agent.WORKSPACE / filename)
+        if download_telegram_file(photo["file_id"], save_path):
+            send(chat, f"📸 Photo received and saved as: <code>{filename}</code>")
+            text = f"I have uploaded a photo named '{filename}'. Please analyze it."
+        else:
+            send(chat, "❌ Failed to download the photo.")
+            return
+    elif "text" in m:
         text = m["text"].strip()
     elif "voice" in m:
         send(chat, "🎤 Transcribing voice note...")

@@ -156,7 +156,8 @@ TOOLS = {t.name: t for t in [run_shell, read_file, write_file, list_files, fetch
                              battery_status, notify, speak, get_clipboard,
                              set_clipboard, get_location, vibrate, toggle_torch,
                              set_volume, get_volume, get_sensor, take_photo,
-                             schedule_task, list_scheduled_tasks, cancel_scheduled_task]}
+                             schedule_task, list_scheduled_tasks, cancel_scheduled_task,
+                             send_file_to_user]}
 
 def learn_ctx(q):
     try:
