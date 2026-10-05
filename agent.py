@@ -41,7 +41,7 @@ SYSTEM = (
     "Suggest voice control using termux-speech-to-text. "
     "Suggest using a secure vault for credential handling. "
     "Always prioritize small, verifiable steps. Never delete anything outside the workspace."
-).
+)
 "
     "- You are sandboxed to the workspace directory.
 "
