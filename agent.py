@@ -247,6 +247,7 @@ def main():
 GROQ_API_KEY=" + gkey + "
 ")
             os.chmod(ENV_FILE, 0o600)
+            os.chmod(ENV_FILE, 0o600)
         llm = ChatOpenAI(model=os.getenv("AGENT_GROQ_MODEL", "llama-3.3-70b-versatile"),
                          base_url="https://api.groq.com/openai/v1",
                          api_key=gkey, max_tokens=2048)
