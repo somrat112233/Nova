@@ -107,6 +107,25 @@ def tg_input(prompt=""):
 
 agent.input = tg_input
 
+
+# ---- Render Health Check Server ----
+from flask import Flask
+import threading
+
+health_app = Flask(__name__)
+
+@health_app.route("/")
+def health():
+    return "Nova is running!", 200
+
+def run_health_server():
+    port = int(os.getenv("PORT", 10000))
+    health_app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
+# হেলথ চেক সার্ভারটি একটি আলাদা থ্রেডে চালু করা
+threading.Thread(target=run_health_server, daemon=True).start()
+# -------------------------------------
+
 busy = threading.Lock()
 
 
