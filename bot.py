@@ -98,129 +98,52 @@ def tg_input(prompt=""):
 agent.input = tg_input
 
 
-# ---- Render Health Check Server ----
-from flask import Flask
-from flask_sock import Sock
-import threading
-
-health_
-
-@health_app.route("/")
-def health():
-    return "Nova is running!", 200
-
-def run_health_server():
-    port = int(os.getenv("PORT", 10000))
-    health_app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
 # হেলথ চেক সার্ভারটি একটি আলাদা থ্রেডে চালু করা
-threading.Thread(target=run_health_server, daemon=True).start()
-# -------------------------------------
 
-busy = threading.Lock()
-
-
-def work(chat, text):
-    try:
-        history = agent.load_history()
-        reply = agent.run_agent(LLM, history, text)
-        agent.save_history(history)
-    except Exception as e:
-        reply = f"Error: {e}"
-    try:
-        send(chat, reply)
-    finally:
-        busy.release()
-
-
-def handle(u):
-    global OWNER, FAILS
-    cq = u.get("callback_query")
-    if cq:
-        tg("answerCallbackQuery", callback_query_id=cq["id"])
-        if cq["from"]["id"] != OWNER:
-            return
-        ev = pending["event"]
-        if ev:
-            pending["answer"] = cq.get("data") == "allow"
-            ev.set()
-        else:
-            send(OWNER, "That request already expired.")
-        return
-
-    m = u.get("message")
-    if not m or "text" not in m:
-        return
-    uid = m["from"]["id"]
-    chat = m["chat"]["id"]
-    text = m["text"].strip()
-
-    if not OWNER:
-        if text.startswith("/pair") and chat == uid:
-            given = text[5:].strip()
-            if hmac.compare_digest(given.encode(), PAIR_CODE.encode()):
-                OWNER = uid
-                save_env("TELEGRAM_OWNER_ID", str(uid))
-                send(chat, "Paired. Nova is ready - send me a task.")
-            else:
-                FAILS += 1
-                send(chat, "Wrong code.")
-                if FAILS >= 5:
-                    sys.exit("Too many wrong pairing codes. Restart the bot.")
-        else:
-            send(chat, "Send: /pair <code shown in Termux>")
-        return
-
-    if uid != OWNER:
-        return
-
-    if text in ("/start", "/help"):
-        send(chat, "Nova ready. Send any task. /reset clears memory.")
-        return
-    if text == "/reset":
-        if busy.locked():
-            send(chat, "Nova is busy, try again after it finishes.")
-        else:
-            agent.save_history([])
-            send(chat, "Memory cleared.")
-        return
-    if not busy.acquire(blocking=False):
-        send(chat, "Nova is still working on the previous task.")
-        return
-    send(chat, "Working...")
-    threading.Thread(target=work, args=(chat, text), daemon=True).start()
-
-
-if not OWNER:
-    PAIR_CODE = f"{secrets.randbelow(10**6):06d}"
-    print(f"\n>>> PAIRING CODE: {PAIR_CODE}")
-    print(">>> In Telegram, open your bot and send:  /pair " + PAIR_CODE + "\n")
-
-print(f"Nova Telegram bot running (backend: {os.getenv('AGENT_BACKEND', 'anthropic')}). Ctrl+C to stop.")
-offset = None
-while True:
-    params = {"timeout": 30, "allowed_updates": ["message", "callback_query"]}
-    if offset is not None:
-        params["offset"] = offset
-    try:
-        r = requests.post(API + "getUpdates", json=params, timeout=45).json()
-    except Exception:
-        time.sleep(3)
-        continue
-    if not r.get("ok", True):
-        print("Telegram error:", r)
-        if r.get("error_code") in (401, 404):
-            sys.exit("Bot token is invalid. Fix TELEGRAM_BOT_TOKEN in ~/agi/.env")
-        time.sleep(5)
-        continue
-    for u in r.get("result", []):
-        offset = u["update_id"] + 1
-        try:
-            handle(u)
-        except SystemExit:
-            raise
-        except Exception as e:
-            print("handler error:", e)
-
-
+# ---- Render Combined HTTP + WebSocket Server ----
+from flask import Flask, request
+from flask_sock import Sock
 import threading
+import json
+import hmac
+import hashlib
+
+app = Flask(__name__)
+sock = Sock(app)
+SHARED_SECRET = os.getenv("AGENT_SHARED_SECRET", "your-secret-here")
+ws_clients = set()
+
+@app.route("/")
+def health_check():
+    return "Nova is running!", 200
+
+@sock.route('/ws')
+def ws_handler(ws):
+    token = request.headers.get('X-Auth-Token')
+    if token != SHARED_SECRET:
+        print("❌ Unauthorized connection attempt.")
+        ws.close()
+        return
+    ws_clients.add(ws)
+    print("✅ Phone client connected.")
+    try:
+        while True:
+            message = ws.receive()
+            if message is None: break
+            data = json.loads(message)
+            if data.get("type") == "tool_result":
+                print(f"[Phone Result] {data.get('tool')}: {data.get('result')}")
+    except Exception as e:
+        print(f"WS Error: {e}")
+    finally:
+        ws_clients.discard(ws)
+        print("❌ Phone client disconnected.")
+
+def run_flask_server():
+    port = int(os.getenv("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
+# সার্ভার চালু করা (ব্যাকগ্রাউন্ডে)
+threading.Thread(target=run_flask_server, daemon=True).start()
+# ------------------------------------------------
