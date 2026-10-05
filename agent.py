@@ -9,10 +9,6 @@ from langchain_core.messages import (
     messages_to_dict, messages_from_dict,
 )
 from langchain_anthropic import ChatAnthropic
-try:
-    import gemini_fix
-except Exception as _e:
-    print("gemini_fix not loaded:", _e)
 
 ROOT = Path.home() / "agi"
 WORKSPACE = ROOT / "workspace"
@@ -198,16 +194,16 @@ def run_agent(llm, history, user_input):
 def main():
     ensure_key()
     if os.getenv("AGENT_BACKEND") == "gemini":
-        from langchain_openai import ChatOpenAI
+        from langchain_google_genai import ChatGoogleGenerativeAI
         gkey = os.getenv("GEMINI_API_KEY")
         if not gkey:
             gkey = getpass.getpass("Enter your GEMINI_API_KEY (saved to ~/agi/.env): ").strip()
             with open(ENV_FILE, "a") as f:
-                f.write(f"\nGEMINI_API_KEY={gkey}\n")
+                f.write(f"
+GEMINI_API_KEY={gkey}
+")
             os.chmod(ENV_FILE, 0o600)
-        llm = ChatOpenAI(model=os.getenv("AGENT_GEMINI_MODEL", "gemini-3.8-flash"),
-                         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-                         api_key=gkey, max_tokens=2048)
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", google_api_key=gkey)
     else:
         llm = ChatAnthropic(model=MODEL, max_tokens=2048)
     llm = llm.bind_tools(list(TOOLS.values()))

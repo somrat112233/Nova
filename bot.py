@@ -56,13 +56,11 @@ def build_llm():
         llm = ChatOpenAI(model="local", base_url="http://127.0.0.1:8080/v1",
                          api_key="none", max_tokens=1024, temperature=0.2)
     elif backend == "gemini":
-        from langchain_openai import ChatOpenAI
+        from langchain_google_genai import ChatGoogleGenerativeAI
         key = os.getenv("GEMINI_API_KEY")
         if not key:
-            sys.exit("GEMINI_API_KEY not found. Run 'nova-gemini' once to save it, then retry.")
-        llm = ChatOpenAI(model=os.getenv("AGENT_GEMINI_MODEL", "gemini-3.8-flash"),
-                         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-                         api_key=key, max_tokens=2048)
+            sys.exit("GEMINI_API_KEY not found. Please add it to Render Environment Variables.")
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", google_api_key=key)
     else:
         agent.ensure_key()
         llm = agent.ChatAnthropic(model=agent.MODEL, max_tokens=2048)
