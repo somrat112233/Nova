@@ -5,6 +5,8 @@ import requests
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import agent
+import ws_server
+import asyncio
 
 if "Nova wants to run" not in (HERE / "agent.py").read_text():
     sys.exit("Shell confirmation patch missing in agent.py. Apply the confirmation step first.")
@@ -209,3 +211,7 @@ while True:
             raise
         except Exception as e:
             print("handler error:", e)
+
+
+import threading
+threading.Thread(target=lambda: asyncio.run(ws_server.start_ws_server()), daemon=True).start()

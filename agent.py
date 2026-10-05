@@ -1,4 +1,6 @@
 import os, sys, json, subprocess, getpass
+import psycopg2
+from psycopg2.extras import Json
 from pathlib import Path
 import requests
 from dotenv import load_dotenv
@@ -159,21 +161,63 @@ def text_of(msg) -> str:
         return c
     return "".join(b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text")
 
-def load_history():
-    if MEMORY_FILE.exists():
+
+class NeonMemoryStore:
+    def __init__(self, connection_string):
+        self.conn_string = connection_string
+        self._init_table()
+
+    def _init_table(self):
         try:
-            return messages_from_dict(json.loads(MEMORY_FILE.read_text()))
-        except Exception:
-            pass
-    return []
+            with psycopg2.connect(self.conn_string) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        CREATE TABLE IF NOT EXISTS chat_history (
+                            id SERIAL PRIMARY KEY,
+                            session_id TEXT NOT NULL,
+                            message_json JSONB NOT NULL,
+                            created_at TIMESTAMPTZ DEFAULT NOW()
+                        );
+                    """)
+                    cur.execute("CREATE INDEX IF NOT EXISTS idx_session_id ON chat_history(session_id);")
+                    conn.commit()
+        except Exception as e:
+            print(f"Neon DB Init Error: {e}")
+
+    def load_history(self, session_id: str):
+        try:
+            with psycopg2.connect(self.conn_string) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT message_json FROM chat_history WHERE session_id = %s ORDER BY id ASC", (session_id,))
+                    rows = cur.fetchall()
+                    if not rows: return []
+                    from langchain_core.messages import messages_from_dict
+                    return messages_from_dict([row[0] for row in rows])
+        except Exception as e:
+            print(f"Error loading history: {e}")
+            return []
+
+    def save_history(self, session_id: str, history: list):
+        try:
+            from langchain_core.messages import messages_to_dict
+            with psycopg2.connect(self.conn_string) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("DELETE FROM chat_history WHERE session_id = %s", (session_id,))
+                    for msg in history:
+                        msg_dict = messages_to_dict([msg])[0]
+                        cur.execute("INSERT INTO chat_history (session_id, message_json) VALUES (%s, %s)", (session_id, Json(msg_dict)))
+                    conn.commit()
+        except Exception as e:
+            print(f"Error saving history: {e}")
+
+memory_store = NeonMemoryStore(os.getenv("NEON_DATABASE_URL"))
+
+def load_history():
+    return memory_store.load_history("default_session")
 
 def save_history(history):
-    # keep last ~40 messages, starting on a human turn so tool pairs stay intact
-    if len(history) > 40:
-        history[:] = history[-40:]
-        while history and not isinstance(history[0], HumanMessage):
-            history.pop(0)
-    MEMORY_FILE.write_text(json.dumps(messages_to_dict(history)))
+    memory_store.save_history("default_session", history)
+
 
 def run_agent(llm, history, user_input):
     history.append(HumanMessage(content=user_input))
