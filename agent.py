@@ -23,23 +23,15 @@ MAX_STEPS = int(os.getenv("AGENT_MAX_STEPS", "15"))
 ALLOW_SHELL = os.getenv("AGENT_ALLOW_SHELL", "1") == "1"
 console = Console()
 
-# --- System Prompt (নিরাপদ ও পরিষ্কার) ---
-SYSTEM = (
-    "You are Nova, an autonomous AI agent running inside Termux on an Android phone. "
-    "Your workspace is /opt/render/agi/workspace. "
-    "Current capabilities: run_shell, read_file, write_file, list_files, fetch_url, "
-    "battery_status, notify, speak, get_clipboard, set_clipboard, get_location, "
-    "vibrate, toggle_torch, set_volume, get_volume, get_sensor, take_photo, "
-    "send_file_to_user, schedule_task, list_scheduled_tasks, cancel_scheduled_task, "
-    "remember, recall, forget, save_skill, list_skills. "
-    "You can execute shell commands, but you cannot use root privileges. "
-    "You cannot install new packages unless the user explicitly allows it. "
-    "You are sandboxed to the workspace directory. "
-    "You must NEVER store or retrieve secrets in long-term memory. "
-    "Future goals: Encourage installing the full termux-api suite. "
-    "Suggest scheduling background tasks. Suggest voice control. "
-    "Always prioritize small, verifiable steps. Never delete anything outside the workspace."
-)
+SYSTEM = """You are Nova, an autonomous AI agent running inside Termux on an Android phone. 
+Your workspace is /opt/render/agi/workspace. 
+Current capabilities: run_shell, read_file, write_file, list_files, fetch_url, battery_status, notify, speak, get_clipboard, set_clipboard, get_location, vibrate, toggle_torch, set_volume, get_volume, get_sensor, take_photo, send_file_to_user, schedule_task, list_scheduled_tasks, cancel_scheduled_task, remember, recall, forget, save_skill, list_skills. 
+You can execute shell commands, but you cannot use root privileges. 
+You cannot install new packages unless the user explicitly allows it. 
+You are sandboxed to the workspace directory. 
+You must NEVER store or retrieve secrets in long-term memory. 
+Future goals: Encourage installing the full termux-api suite. Suggest scheduling background tasks. Suggest voice control. 
+Always prioritize small, verifiable steps. Never delete anything outside the workspace."""
 
 def _safe(path: str) -> Path:
     p = (WORKSPACE / path).resolve()
@@ -110,7 +102,7 @@ def load_history():
 def save_history(history):
     memory_store.save_history("default_session", history)
 
-# --- Tools ---
+# --- Tools (With Docstrings) ---
 @tool
 def run_shell(command: str) -> str:
     """Run a shell command in the workspace (60s timeout). Returns stdout+stderr."""
@@ -147,37 +139,84 @@ def fetch_url(url: str) -> str:
     return r.text[:6000]
 
 @tool
-def battery_status() -> str: return "Command sent to phone."
+def battery_status() -> str:
+    """Get the phone's battery status."""
+    return "Command sent to phone."
+
 @tool
-def notify(title: str, text: str) -> str: return "Command sent to phone."
+def notify(title: str, text: str) -> str:
+    """Show an Android notification on the phone."""
+    return "Command sent to phone."
+
 @tool
-def speak(text: str) -> str: return "Command sent to phone."
+def speak(text: str) -> str:
+    """Speak text aloud using the phone text-to-speech."""
+    return "Command sent to phone."
+
 @tool
-def get_clipboard() -> str: return "Command sent to phone."
+def get_clipboard() -> str:
+    """Read the phone clipboard text."""
+    return "Command sent to phone."
+
 @tool
-def set_clipboard(text: str) -> str: return "Command sent to phone."
+def set_clipboard(text: str) -> str:
+    """Put text on the phone clipboard."""
+    return "Command sent to phone."
+
 @tool
-def get_location() -> str: return "Command sent to phone."
+def get_location() -> str:
+    """Get the phone's current GPS/network location as JSON."""
+    return "Command sent to phone."
+
 @tool
-def vibrate(duration_ms: int = 1000) -> str: return "Command sent to phone."
+def vibrate(duration_ms: int = 1000) -> str:
+    """Vibrate the phone for a specified duration in milliseconds."""
+    return "Command sent to phone."
+
 @tool
-def toggle_torch(state: str = "on") -> str: return "Command sent to phone."
+def toggle_torch(state: str = "on") -> str:
+    """Turn the phone torch on or off. State should be 'on' or 'off'."""
+    return "Command sent to phone."
+
 @tool
-def set_volume(stream: str = "music", volume: int = 50) -> str: return "Command sent to phone."
+def set_volume(stream: str = "music", volume: int = 50) -> str:
+    """Set the volume for a specific stream (music, ring, alarm) volume 0-100."""
+    return "Command sent to phone."
+
 @tool
-def get_volume() -> str: return "Command sent to phone."
+def get_volume() -> str:
+    """Get the current volume levels of the phone."""
+    return "Command sent to phone."
+
 @tool
-def get_sensor(sensor_name: str = "accelerometer") -> str: return "Command sent to phone."
+def get_sensor(sensor_name: str = "accelerometer") -> str:
+    """Get a single reading from a phone sensor (e.g., accelerometer, light)."""
+    return "Command sent to phone."
+
 @tool
-def take_photo(filename: str = "photo.jpg") -> str: return "Command sent to phone."
+def take_photo(filename: str = "photo.jpg") -> str:
+    """Take a photo using the phone's rear camera."""
+    return "Command sent to phone."
+
 @tool
-def send_file_to_user(filepath: str) -> str: return f"FILE_SEND:{filepath}"
+def send_file_to_user(filepath: str) -> str:
+    """Send a file from the workspace to the user on Telegram."""
+    return f"FILE_SEND:{filepath}"
+
 @tool
-def schedule_task(interval_minutes: int, tool_name: str, args: dict = None, task_id: str = None) -> str: return "Command sent to phone."
+def schedule_task(interval_minutes: int, tool_name: str, args: dict = None, task_id: str = None) -> str:
+    """Schedule a recurring task on the phone."""
+    return "Command sent to phone."
+
 @tool
-def list_scheduled_tasks() -> str: return "Command sent to phone."
+def list_scheduled_tasks() -> str:
+    """List all currently scheduled background tasks on the phone."""
+    return "Command sent to phone."
+
 @tool
-def cancel_scheduled_task(task_id: str) -> str: return "Command sent to phone."
+def cancel_scheduled_task(task_id: str) -> str:
+    """Cancel a scheduled task by its task_id."""
+    return "Command sent to phone."
 
 # Learning Tools
 try:
@@ -186,15 +225,25 @@ try:
 except Exception as _e:
     print("learn not loaded:", _e)
     @tool
-    def remember(topic: str, fact: str) -> str: return "Learning module not loaded."
+    def remember(topic: str, fact: str) -> str:
+        """Save a durable fact or lasting user preference."""
+        return "Learning module not loaded."
     @tool
-    def recall(query: str) -> str: return "Learning module not loaded."
+    def recall(query: str) -> str:
+        """Search long-term notes for facts related to the query."""
+        return "Learning module not loaded."
     @tool
-    def forget(contains: str) -> str: return "Learning module not loaded."
+    def forget(contains: str) -> str:
+        """Delete saved notes whose topic or fact contains the given text."""
+        return "Learning module not loaded."
     @tool
-    def save_skill(name: str, description: str, code: str) -> str: return "Learning module not loaded."
+    def save_skill(name: str, description: str, code: str) -> str:
+        """Save a tested, reusable Python script as a skill."""
+        return "Learning module not loaded."
     @tool
-    def list_skills() -> str: return "Learning module not loaded."
+    def list_skills() -> str:
+        """List saved skills."""
+        return "Learning module not loaded."
 
 TOOLS = {t.name: t for t in [
     run_shell, read_file, write_file, list_files, fetch_url,
@@ -244,7 +293,7 @@ def main():
                          base_url="https://api.groq.com/openai/v1",
                          api_key=gkey, max_tokens=2048)
     else:
-        sys.exit("Only Groq backend is configured for this deployment.")
+        sys.exit("Only Groq backend is configured.")
     
     llm = llm.bind_tools(list(TOOLS.values()))
     history = load_history()
