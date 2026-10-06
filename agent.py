@@ -1,6 +1,7 @@
 import os, sys, json, subprocess, getpass
 from pathlib import Path
 import requests
+from bs4 import BeautifulSoup
 import psycopg2
 from psycopg2.extras import Json
 from dotenv import load_dotenv
@@ -134,9 +135,21 @@ def list_files(path: str = ".") -> str:
 
 @tool
 def fetch_url(url: str) -> str:
-    """Fetch a web page or API URL and return the first 6000 characters of text."""
-    r = requests.get(url, timeout=20, headers={"User-Agent": "termux-agent"})
-    return r.text[:6000]
+    """Fetch a web page or API URL, clean the HTML using BeautifulSoup, and return the first 6000 characters of readable text."""
+    try:
+        r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0 (Android 14; Mobile)"})
+        soup = BeautifulSoup(r.text, "html.parser")
+        # স্ক্রিপ্ট এবং স্টাইল ট্যাগগুলো মুছে ফেলা
+        for script in soup(["script", "style"]):
+            script.extract()
+        # পরিষ্কার টেক্সট বের করা
+        text = soup.get_text(separator="\n")
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = "\n".join(chunk for chunk in chunks if chunk)
+        return text[:6000] or "No readable text found."
+    except Exception as e:
+        return f"Error fetching URL: {e}"
 
 @tool
 def battery_status() -> str:
