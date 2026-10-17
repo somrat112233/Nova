@@ -215,7 +215,7 @@ def take_photo(filename: str = "photo.jpg") -> str:
 # ==================== Cryptologyt Tools ====================
 @tool
 def cryptologyt_status() -> str:
-    """Check if the Cryptologyt trading bot is currently running on the phone."""
+    """MUST USE THIS TOOL when the user asks about 'cryptologyt', 'cryptolyt', 'crypto bot', or trading bot status. It checks if the bot is running on the phone."""
     return "Command sent to phone."
 
 @tool
