@@ -108,47 +108,47 @@ def execute_tool(tool_name: str, args: dict) -> str:
         save_schedule(tasks)
         return f"Task {tid} cancelled."
 
-    # ==================== Cryptolyt Tools ====================
-    elif tool_name == "cryptolyt_status":
+    # ==================== Cryptologyt Tools ====================
+    elif tool_name == "cryptologyt_status":
         import sys, json
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return json.dumps(cm.cryptolyt_status(), indent=2)
-    elif tool_name == "cryptolyt_start":
+        import cryptologyt_manager as cm
+        return json.dumps(cm.cryptologyt_status(), indent=2)
+    elif tool_name == "cryptologyt_start":
         import sys
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return cm.cryptolyt_start()
-    elif tool_name == "cryptolyt_stop":
+        import cryptologyt_manager as cm
+        return cm.cryptologyt_start()
+    elif tool_name == "cryptologyt_stop":
         import sys
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return cm.cryptolyt_stop()
-    elif tool_name == "cryptolyt_logs":
+        import cryptologyt_manager as cm
+        return cm.cryptologyt_stop()
+    elif tool_name == "cryptologyt_logs":
         import sys
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return cm.cryptolyt_logs(args.get("lines", 50), args.get("log_type", "main"))
-    elif tool_name == "cryptolyt_signals":
+        import cryptologyt_manager as cm
+        return cm.cryptologyt_logs(args.get("lines", 50), args.get("log_type", "main"))
+    elif tool_name == "cryptologyt_signals":
         import sys, json
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return json.dumps(cm.cryptolyt_parse_signals(args.get("lines", 500)), indent=2, ensure_ascii=False)
-    elif tool_name == "cryptolyt_health":
+        import cryptologyt_manager as cm
+        return json.dumps(cm.cryptologyt_parse_signals(args.get("lines", 500)), indent=2, ensure_ascii=False)
+    elif tool_name == "cryptologyt_health":
         import sys, json
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return json.dumps(cm.cryptolyt_health_check(), indent=2)
-    elif tool_name == "cryptolyt_recent_trades":
+        import cryptologyt_manager as cm
+        return json.dumps(cm.cryptologyt_health_check(), indent=2)
+    elif tool_name == "cryptologyt_recent_trades":
         import sys
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return cm.cryptolyt_recent_trades(args.get("lines", 200))
-    elif tool_name == "cryptolyt_summary":
+        import cryptologyt_manager as cm
+        return cm.cryptologyt_recent_trades(args.get("lines", 200))
+    elif tool_name == "cryptologyt_summary":
         import sys, json
         sys.path.insert(0, os.path.expanduser("~/agi"))
-        import cryptolyt_manager as cm
-        return json.dumps(cm.cryptolyt_summary(), indent=2, ensure_ascii=False)
+        import cryptologyt_manager as cm
+        return json.dumps(cm.cryptologyt_summary(), indent=2, ensure_ascii=False)
 
     else:
         return f"ERROR: Unknown tool {tool_name}"

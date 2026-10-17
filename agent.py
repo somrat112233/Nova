@@ -212,45 +212,45 @@ def take_photo(filename: str = "photo.jpg") -> str:
     return "Command sent to phone."
 
 
-# ==================== Cryptolyt Tools ====================
+# ==================== Cryptologyt Tools ====================
 @tool
-def cryptolyt_status() -> str:
-    """Check if the Cryptolyt trading bot is currently running on the phone."""
+def cryptologyt_status() -> str:
+    """Check if the Cryptologyt trading bot is currently running on the phone."""
     return "Command sent to phone."
 
 @tool
-def cryptolyt_start() -> str:
-    """Start the Cryptolyt trading bot on the phone."""
+def cryptologyt_start() -> str:
+    """Start the Cryptologyt trading bot on the phone."""
     return "Command sent to phone."
 
 @tool
-def cryptolyt_stop() -> str:
-    """Stop the Cryptolyt trading bot on the phone."""
+def cryptologyt_stop() -> str:
+    """Stop the Cryptologyt trading bot on the phone."""
     return "Command sent to phone."
 
 @tool
-def cryptolyt_logs(lines: int = 50, log_type: str = "main") -> str:
-    """Get recent logs from Cryptolyt. log_type can be 'main' or 'live'."""
+def cryptologyt_logs(lines: int = 50, log_type: str = "main") -> str:
+    """Get recent logs from Cryptologyt. log_type can be 'main' or 'live'."""
     return "Command sent to phone."
 
 @tool
-def cryptolyt_signals(lines: int = 500) -> str:
-    """Parse recent BUY/SELL/PROFIT/LOSS signals from Cryptolyt's log."""
+def cryptologyt_signals(lines: int = 500) -> str:
+    """Parse recent BUY/SELL/PROFIT/LOSS signals from Cryptologyt's log."""
     return "Command sent to phone."
 
 @tool
-def cryptolyt_health() -> str:
-    """Check Cryptolyt's health (errors, warnings, last log time)."""
+def cryptologyt_health() -> str:
+    """Check Cryptologyt's health (errors, warnings, last log time)."""
     return "Command sent to phone."
 
 @tool
-def cryptolyt_recent_trades(lines: int = 200) -> str:
-    """Get recent trades/positions from Cryptolyt's log."""
+def cryptologyt_recent_trades(lines: int = 200) -> str:
+    """Get recent trades/positions from Cryptologyt's log."""
     return "Command sent to phone."
 
 @tool
-def cryptolyt_summary() -> str:
-    """Generate a complete Cryptolyt summary (status + signals + report)."""
+def cryptologyt_summary() -> str:
+    """Generate a complete Cryptologyt summary (status + signals + report)."""
     return "Command sent to phone."
 
 @tool
