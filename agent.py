@@ -306,7 +306,12 @@ TOOLS = {t.name: t for t in [
     get_location, vibrate, toggle_torch, set_volume, get_volume,
     get_sensor, take_photo, send_file_to_user, schedule_task,
     list_scheduled_tasks, cancel_scheduled_task, remember, recall,
-    forget, save_skill, list_skills
+    forget, save_skill, list_skills, termux_list_files,
+    termux_read_file, termux_write_file, termux_delete_file,
+    termux_search_files, termux_scan_all, termux_storage_info,
+    cryptologyt_status, cryptologyt_start, cryptologyt_stop,
+    cryptologyt_logs, cryptologyt_signals, cryptologyt_health,
+    cryptologyt_recent_trades, cryptologyt_summary
 ]}
 
 def learn_ctx(q):
