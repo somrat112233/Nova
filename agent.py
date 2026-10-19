@@ -32,7 +32,7 @@ You cannot install new packages unless the user explicitly allows it.
 You are sandboxed to the workspace directory. 
 You must NEVER store or retrieve secrets in long-term memory. 
 Future goals: Encourage installing the full termux-api suite. Suggest scheduling background tasks. Suggest voice control. 
-Always prioritize small, verifiable steps. Never delete anything outside the workspace."""
+If a specific task cannot be done with your existing tools, you MUST write a Python script and use 'execute_dynamic_python' to run it on the phone. Always prioritize small, verifiable steps. Never delete anything outside the workspace."""
 
 def _safe(path: str) -> Path:
     p = (WORKSPACE / path).resolve()
@@ -376,6 +376,12 @@ def cryptologyt_summary() -> str:
     """Generate a complete Cryptologyt summary."""
     return "Command sent to phone."
 
+
+@tool
+def execute_dynamic_python(code: str) -> str:
+    """Execute a dynamically generated Python script on the phone when no existing tool fits. Provide the full Python code as a string."""
+    return "Command sent to phone."
+
 TOOLS = {t.name: t for t in [
     run_shell, read_file, write_file, list_files, fetch_url,
     battery_status, notify, speak, get_clipboard, set_clipboard,
@@ -387,7 +393,7 @@ TOOLS = {t.name: t for t in [
     termux_search_files, termux_scan_all, termux_storage_info,
     cryptologyt_status, cryptologyt_start, cryptologyt_stop,
     cryptologyt_logs, cryptologyt_signals, cryptologyt_health,
-    cryptologyt_recent_trades, cryptologyt_summary
+    cryptologyt_recent_trades, cryptologyt_summary, execute_dynamic_python
 ]}
 
 def learn_ctx(q):
