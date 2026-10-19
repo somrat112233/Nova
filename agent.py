@@ -300,6 +300,82 @@ except Exception as _e:
         """List saved skills."""
         return "Learning module not loaded."
 
+
+@tool
+def termux_list_files(path: str = "~/") -> str:
+    """List files in a Termux directory on the phone."""
+    return "Command sent to phone."
+
+@tool
+def termux_read_file(path: str) -> str:
+    """Read a file from the Termux filesystem."""
+    return "Command sent to phone."
+
+@tool
+def termux_write_file(path: str, content: str) -> str:
+    """Write a file to the Termux filesystem."""
+    return "Command sent to phone."
+
+@tool
+def termux_delete_file(path: str) -> str:
+    """Delete a file from the Termux filesystem."""
+    return "Command sent to phone."
+
+@tool
+def termux_search_files(directory: str, pattern: str) -> str:
+    """Search for files by name pattern in a Termux directory."""
+    return "Command sent to phone."
+
+@tool
+def termux_scan_all(base: str = "~/", max_depth: int = 2) -> str:
+    """Scan the entire Termux home directory tree."""
+    return "Command sent to phone."
+
+@tool
+def termux_storage_info() -> str:
+    """Get the phone's total, used, and free storage information."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_status() -> str:
+    """Check if the Cryptologyt trading bot is running on the phone."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_start() -> str:
+    """Start the Cryptologyt trading bot."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_stop() -> str:
+    """Stop the Cryptologyt trading bot."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_logs(lines: int = 50, log_type: str = "main") -> str:
+    """Get recent logs from Cryptologyt."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_signals(lines: int = 500) -> str:
+    """Parse recent BUY/SELL signals from Cryptologyt."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_health() -> str:
+    """Check Cryptologyt's health."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_recent_trades(lines: int = 200) -> str:
+    """Get recent trades from Cryptologyt."""
+    return "Command sent to phone."
+
+@tool
+def cryptologyt_summary() -> str:
+    """Generate a complete Cryptologyt summary."""
+    return "Command sent to phone."
+
 TOOLS = {t.name: t for t in [
     run_shell, read_file, write_file, list_files, fetch_url,
     battery_status, notify, speak, get_clipboard, set_clipboard,
